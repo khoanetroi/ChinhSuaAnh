@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-UI Package - Các component giao diện riêng lẻ
+UI Package - Các component giao diện
 """
 
 from . import Colors

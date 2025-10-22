@@ -6,8 +6,8 @@ Các chức năng: Làm mờ, Làm sáng, Làm tối
 
 import tkinter as tk
 from tkinter import messagebox
-from Components import Blur, Brightness, ImageHandler
-from Components.UI import Button, Section, Layout, Colors
+from Features import Blur, Brightness, ImageHandler
+from UI import Button, Section, Layout, Colors
 
 
 class ImageEditorApp:
