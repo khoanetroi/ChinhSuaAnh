@@ -69,7 +69,7 @@ class ImageEditorApp:
         # === NHÓM LÀM MỜ (COLLAPSIBLE) ===
         self.blur_frame = Section.create_collapsible_section(
             scrollable_frame,
-            "🌫️ LÀM MỜ ẢNH",
+            "LÀM MỜ ẢNH",
             [
                 ("Làm Mờ Trung Bình", self.apply_average_blur, Colors.get_color('blur_1')),
                 ("Làm Mờ Gaussian", self.apply_gaussian_blur, Colors.get_color('blur_2')),
@@ -83,7 +83,7 @@ class ImageEditorApp:
         # === NHÓM ĐỘ SÁNG (COLLAPSIBLE) ===
         self.brightness_frame = Section.create_collapsible_section(
             scrollable_frame,
-            "💡 ĐỘ SÁNG",
+            "ĐỘ SÁNG",
             [
                 ("Làm Sáng Ảnh", self.increase_brightness, Colors.get_color('bright_1')),
                 ("Làm Tối Ảnh", self.decrease_brightness, Colors.get_color('bright_2')),
