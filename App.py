@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
 App.py - Ứng dụng chỉnh sửa ảnh với giao diện GUI
-Các chức năng: Làm mờ, Làm sáng, Làm tối
+Các chức năng: Làm mờ, Làm sáng, Làm tối, Nhận diện và làm đẹp khuôn mặt
 """
 
 import tkinter as tk
 from tkinter import messagebox
-from Features import Blur, Brightness, ImageHandler
+from Features import Blur, Brightness, ImageHandler, FaceBeautify
 from UI import Button, Section, Layout, Colors
 
 
@@ -95,6 +95,29 @@ class ImageEditorApp:
         
         Section.create_separator(scrollable_frame)
         
+        # === NHẬN DIỆN VÀ LÀM ĐẸP KHUÔN MẶT ===
+        Button.create_button(
+            scrollable_frame,
+            text="📸 Làm Đẹp Từ Ảnh",
+            command=self.open_face_beautify_image,
+            bg="#e91e63",
+            font_size=11,
+            bold=True,
+            pady_top=5
+        )
+        
+        Button.create_button(
+            scrollable_frame,
+            text="📹 Làm Đẹp Từ Camera",
+            command=self.open_face_beautify_camera,
+            bg="#9c27b0",
+            font_size=11,
+            bold=True,
+            pady_top=5
+        )
+        
+        Section.create_separator(scrollable_frame)
+        
         # === NÚT ĐIỀU KHIỂN ===
         control_frame = Layout.create_control_frame(scrollable_frame)
         
@@ -170,6 +193,27 @@ class ImageEditorApp:
             messagebox.showwarning("Cảnh báo", "Vui lòng chọn ảnh trước!")
             return False
         return True
+    
+    # === CHỨC NĂNG NHẬN DIỆN VÀ LÀM ĐẸP KHUÔN MẶT ===
+    
+    def open_face_beautify_image(self):
+        """Mở cửa sổ làm đẹp từ ảnh"""
+        if not self.check_image_loaded():
+            return
+        
+        try:
+            from FaceBeautifyWindow import FaceBeautifyWindow
+            FaceBeautifyWindow(self, self.current_image)
+        except Exception as e:
+            messagebox.showerror("Lỗi", f"Không thể mở cửa sổ:\n{str(e)}")
+    
+    def open_face_beautify_camera(self):
+        """Mở cửa sổ camera nhận diện và làm đẹp"""
+        try:
+            from FaceBeautifyCamera import FaceBeautifyCameraWindow
+            FaceBeautifyCameraWindow(self)
+        except Exception as e:
+            messagebox.showerror("Lỗi", f"Không thể mở cửa sổ:\n{str(e)}")
     
     # === CÁC HÀM XỬ LÝ LÀM MỜ ===
     
