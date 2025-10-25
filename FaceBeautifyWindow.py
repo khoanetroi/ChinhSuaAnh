@@ -26,6 +26,11 @@ class FaceBeautifyWindow:
         self.display_image = None
         self.faces = []
         
+        # Giá trị mặc định
+        self.DEFAULT_SMOOTH = 0.5
+        self.DEFAULT_BRIGHTNESS = 20
+        self.DEFAULT_CONTRAST = 1.2
+        
         # Tạo cửa sổ mới
         self.window = tk.Toplevel(parent.root)
         self.window.title("Nhận Diện và Làm Đẹp Khuôn Mặt - Từ Ảnh")
@@ -33,9 +38,9 @@ class FaceBeautifyWindow:
         self.window.configure(bg="#f0f0f0")
         
         # Biến trạng thái
-        self.smooth_level = tk.DoubleVar(value=0.5)
-        self.brightness_value = tk.IntVar(value=20)
-        self.contrast_value = tk.DoubleVar(value=1.2)
+        self.smooth_level = tk.DoubleVar(value=self.DEFAULT_SMOOTH)
+        self.brightness_value = tk.IntVar(value=self.DEFAULT_BRIGHTNESS)
+        self.contrast_value = tk.DoubleVar(value=self.DEFAULT_CONTRAST)
         
         self.create_widgets()
         
@@ -76,6 +81,12 @@ class FaceBeautifyWindow:
         canvas.create_window((0, 0), window=scroll_frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
         
+        # Bind mouse wheel to scroll
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        
+        canvas.bind_all("<MouseWheel>", _on_mousewheel)
+        
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
         
@@ -109,6 +120,20 @@ class FaceBeautifyWindow:
         self.create_slider_control(scroll_frame, "Tương Phản:", 
                                    self.contrast_value, 1.0, 2.0, self.apply_contrast)
         
+        # Nút Reset (gộp cả ảnh và giá trị)
+        reset_btn = tk.Button(
+            scroll_frame, 
+            text="🔄 Reset Giá Trị Mặc Định",
+            command=self.reset_to_default,
+            font=("Arial", 10, "bold"),
+            bg="#e74c3c",
+            fg="white",
+            relief=tk.FLAT,
+            cursor="hand2",
+            height=2
+        )
+        reset_btn.pack(fill=tk.X, padx=10, pady=10)
+        
         ttk.Separator(scroll_frame, orient='horizontal').pack(fill=tk.X, padx=10, pady=15)
         
         tk.Label(scroll_frame, text="🌟 HIỆU ỨNG", font=("Arial", 12, "bold"),
@@ -120,14 +145,19 @@ class FaceBeautifyWindow:
         
         ttk.Separator(scroll_frame, orient='horizontal').pack(fill=tk.X, padx=10, pady=15)
         
-        # Control buttons
-        control_frame = tk.Frame(scroll_frame, bg="white")
-        control_frame.pack(fill=tk.X, padx=10, pady=10)
-        
-        self.create_control_button(control_frame, "🔄 Reset", 
-                                   self.reset_image, "#e74c3c").pack(side=tk.LEFT, padx=5)
-        self.create_control_button(control_frame, "✅ Áp Dụng", 
-                                   self.apply_changes, "#27ae60").pack(side=tk.RIGHT, padx=5)
+        # Nút Áp Dụng
+        apply_btn = tk.Button(
+            scroll_frame,
+            text="✅ Áp Dụng Vào Ảnh Chính",
+            command=self.apply_changes,
+            font=("Arial", 10, "bold"),
+            bg="#27ae60",
+            fg="white",
+            relief=tk.FLAT,
+            cursor="hand2",
+            height=2
+        )
+        apply_btn.pack(fill=tk.X, padx=10, pady=10)
         
         # Right panel
         right_panel = tk.Frame(main, bg="white", relief=tk.RAISED, borderwidth=2)
@@ -319,6 +349,8 @@ class FaceBeautifyWindow:
         if not self.check_image():
             return
         
+        # Copy từ ảnh gốc để xóa khung nhận diện
+        self.current_image = self.original_image.copy()
         self.current_image = FaceBeautify.add_soft_filter(self.current_image, intensity=0.3)
         self.display_current_image()
         self.update_status("✓ Đã áp dụng filter mềm mại")
@@ -332,20 +364,27 @@ class FaceBeautifyWindow:
         self.display_current_image()
         self.update_status("✓ Đã giảm tì vết")
     
-    def reset_image(self):
+    def reset_to_default(self):
+        """Reset ảnh về gốc và các giá trị về mặc định (giữ lại kết quả nhận diện)"""
         if not self.check_image():
             return
         
+        # Reset ảnh về gốc
         self.current_image = self.original_image.copy()
-        self.faces = []
         
-        self.smooth_level.set(0.5)
-        self.brightness_value.set(20)
-        self.contrast_value.set(1.2)
+        # Giữ lại kết quả nhận diện (self.faces), vẽ lại khung nếu có
+        if len(self.faces) > 0:
+            self.current_image = FaceBeautify.draw_face_rectangles(self.current_image, self.faces)
+        
+        # Reset giá trị slider
+        self.smooth_level.set(self.DEFAULT_SMOOTH)
+        self.brightness_value.set(self.DEFAULT_BRIGHTNESS)
+        self.contrast_value.set(self.DEFAULT_CONTRAST)
         
         self.display_current_image()
-        self.update_status("🔄 Đã reset về ảnh gốc")
+        self.update_status(f"🔄 Đã reset về ảnh gốc và giá trị mặc định (giữ {len(self.faces)} khuôn mặt đã nhận diện)")
     
+
     def apply_changes(self):
         if not self.check_image():
             return

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-FaceBeautifyCamera.py - Cửa sổ camera nhận diện và làm đẹp khuôn mặt real-time
-Copy file này vào: thư mục gốc (cùng cấp với App.py)
+FaceBeautifyCamera.py - Fix nhấp nháy màn hình
 """
 
 import cv2
@@ -10,10 +9,12 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from PIL import Image, ImageTk
 import threading
+import queue
+import time
 
 
 class FaceBeautifyCameraWindow:
-    """Cửa sổ camera cho nhận diện và làm đẹp khuôn mặt real-time"""
+    """Cửa sổ camera - Fix nhấp nháy display"""
     
     def __init__(self, parent):
         self.parent = parent
@@ -28,6 +29,9 @@ class FaceBeautifyCameraWindow:
         self.current_frame = None
         self.faces = []
         
+        # Queue để truyền frame từ thread sang main thread
+        self.frame_queue = queue.Queue(maxsize=2)
+        
         # Haar Cascade
         self.face_cascade = cv2.CascadeClassifier(
             cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
@@ -40,6 +44,10 @@ class FaceBeautifyCameraWindow:
         self.brightness_value = tk.IntVar(value=15)
         
         self.captured_image = None
+        
+        # Giảm nhấp nháy
+        self.frame_count = 0
+        self.detection_interval = 20  # Nhận diện mỗi 20 frames
         
         self.create_widgets()
         self.window.protocol("WM_DELETE_WINDOW", self.on_closing)
@@ -151,29 +159,27 @@ class FaceBeautifyCameraWindow:
         self.cap = cv2.VideoCapture(0)
         
         if not self.cap.isOpened():
-            messagebox.showerror("Lỗi", "Không thể mở camera!\nKiểm tra camera đã kết nối chưa.")
+            messagebox.showerror("Lỗi", "Không thể mở camera!")
             return
         
-        # Cài đặt camera để giảm nhấp nháy
+        # Cài đặt camera
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
         self.cap.set(cv2.CAP_PROP_FPS, 30)
         self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         
-        # Tắt auto exposure và auto white balance (nếu camera hỗ trợ)
-        try:
-            self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25)  # 0.25 = manual mode
-            self.cap.set(cv2.CAP_PROP_EXPOSURE, -6)
-        except:
-            pass  # Một số camera không hỗ trợ
-        
         self.is_running = True
+        self.frame_count = 0
+        self.faces = []
+        
         self.btn_start.config(state=tk.DISABLED)
         self.btn_stop.config(state=tk.NORMAL)
         self.btn_capture.config(state=tk.NORMAL)
         self.update_status("✓ Camera đang chạy")
         
-        threading.Thread(target=self.process_video, daemon=True).start()
+        # Start 2 threads: 1 cho capture, 1 cho display
+        threading.Thread(target=self.capture_video, daemon=True).start()
+        self.update_display()  # Chạy trong main thread
     
     def stop_camera(self):
         """Tắt camera"""
@@ -190,10 +196,8 @@ class FaceBeautifyCameraWindow:
         self.video_label.config(image="", text="📹\n\nNhấn 'Bật Camera' để bắt đầu")
         self.update_status("Camera đã tắt")
     
-    def process_video(self):
-        """Xử lý video stream"""
-        import time
-        
+    def capture_video(self):
+        """Thread capture video từ camera"""
         while self.is_running and self.cap is not None:
             ret, frame = self.cap.read()
             
@@ -202,37 +206,70 @@ class FaceBeautifyCameraWindow:
             
             frame = cv2.flip(frame, 1)
             
-            # Nhận diện
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            self.faces = self.face_cascade.detectMultiScale(
-                gray, scaleFactor=1.1, minNeighbors=5, minSize=(50, 50)
-            )
+            # Nhận diện mỗi 20 frames
+            if self.frame_count % self.detection_interval == 0:
+                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                gray = cv2.equalizeHist(gray)
+                
+                detected_faces = self.face_cascade.detectMultiScale(
+                    gray, 
+                    scaleFactor=1.2,
+                    minNeighbors=7,
+                    minSize=(80, 80),
+                    flags=cv2.CASCADE_SCALE_IMAGE
+                )
+                
+                if len(detected_faces) > 0:
+                    self.faces = list(detected_faces)
+            
+            self.frame_count += 1
             
             # Làm đẹp
             if self.apply_beautify.get() and len(self.faces) > 0:
                 frame = self.apply_beautification(frame)
             
             # Vẽ khung
-            if self.show_detection.get():
+            if self.show_detection.get() and len(self.faces) > 0:
                 for (x, y, w, h) in self.faces:
                     cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 3)
                     cv2.putText(frame, "Face", (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
             
-            # Info
-            face_count = len(self.faces)
-            info_text = f"Camera đang chạy\nSố khuôn mặt: {face_count}"
-            if self.apply_beautify.get():
-                info_text += "\nĐang làm đẹp: ✓"
-            self.info_label.config(text=info_text)
-            
-            self.display_frame(frame)
             self.current_frame = frame.copy()
             
-            # Delay để ổn định frame rate (giảm nhấp nháy)
-            time.sleep(0.03)  # ~30 FPS
+            # Đưa frame vào queue
+            if not self.frame_queue.full():
+                self.frame_queue.put(frame)
+            
+            time.sleep(0.033)  # ~30 FPS
         
         if self.cap is not None:
             self.cap.release()
+    
+    def update_display(self):
+        """Update display trong main thread (không nhấp nháy)"""
+        if not self.is_running:
+            return
+        
+        try:
+            # Lấy frame từ queue
+            if not self.frame_queue.empty():
+                frame = self.frame_queue.get_nowait()
+                
+                # Update info
+                face_count = len(self.faces)
+                info_text = f"Camera đang chạy\nSố khuôn mặt: {face_count}"
+                if self.apply_beautify.get():
+                    info_text += "\nĐang làm đẹp: ✓"
+                self.info_label.config(text=info_text)
+                
+                # Display frame
+                self.display_frame(frame)
+        except:
+            pass
+        
+        # Schedule next update
+        if self.is_running:
+            self.window.after(33, self.update_display)  # ~30 FPS
     
     def apply_beautification(self, frame):
         """Áp dụng làm đẹp"""
