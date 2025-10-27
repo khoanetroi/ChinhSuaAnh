@@ -1,15 +1,12 @@
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8 */
 """
 App.py - Ứng dụng chỉnh sửa ảnh chuyên nghiệp với giao diện GUI
 Các chức năng: 
 - Làm mờ & làm mịn ảnh
 - Điều chỉnh độ sáng, tối, tương phản
-- Lọc & khử nhiễu
-- Làm rõ nét
-- Tìm đường viền
-- Cân bằng màu sắc
-- Hiệu ứng đặc biệt
-- Xoay & lật ảnh (MỚI!)
+- Làm rõ nét ảnh
+- Phát hiện đường viền (Edge Detection)
+- Xoay & biến đổi ảnh (Transform)
 - Nhận diện và làm đẹp khuôn mặt
 """
 
@@ -17,7 +14,7 @@ import os
 import tkinter as tk
 from tkinter import messagebox
 from PIL import Image, ImageDraw, ImageTk
-from Features import Blur, Brightness, ImageHandler, FaceBeautify, Sharpen, EdgeDetection, Histogram, Morphology, Transform
+from Features import Blur, Brightness, ImageHandler, FaceBeautify, Sharpen, EdgeDetection, Transform
 from UI import Button, Section, Layout, Colors
 
 
@@ -50,8 +47,6 @@ class ImageEditorApp:
         self.brightness_collapsed = True
         self.sharpen_collapsed = True
         self.edge_collapsed = True
-        self.histogram_collapsed = True
-        self.morphology_collapsed = True
         self.transform_collapsed = True
         
         # Nạp icon
@@ -198,57 +193,33 @@ class ImageEditorApp:
         # === NHÓM PHÁT HIỆN BIÊN (COLLAPSIBLE) ===
         self.edge_frame = Section.create_collapsible_section(
             scrollable_frame,
-            "TÌM ĐƯỜNG VIỀN",
+            "🔍 TÌM ĐƯỜNG VIỀN",
             [
                 ("Viền Cơ Bản (Roberts)", self.apply_roberts_edge, "#5d4037"),
                 ("Viền Trung Bình (Prewitt)", self.apply_prewitt_edge, "#6d4c41"),
                 ("Viền Mạnh (Sobel)", self.apply_sobel_edge, "#795548"),
                 ("Viền Tự Động (Canny)", self.apply_canny_edge, "#8d6e63"),
+                ("Viền Laplacian", self.apply_laplacian_edge, "#a1887f"),
+                ("Viền Scharr", self.apply_scharr_edge, "#bcaaa4"),
             ],
             "edge",
             self
         )
         
-        # === NHÓM HISTOGRAM (COLLAPSIBLE) ===
-        self.histogram_frame = Section.create_collapsible_section(
-            scrollable_frame,
-            "CÂN BẰNG MÀU SẮC",
-            [
-                ("Cân Bằng Sáng Tối", self.apply_histogram_equalization, "#c2185b"),
-                ("Cân Bằng Thông Minh", self.apply_clahe, "#d81b60"),
-                ("Tăng Độ Tương Phản", self.apply_histogram_stretching, "#e91e63"),
-                ("Tự Động Làm Đẹp", self.apply_auto_enhance, "#f06292"),
-            ],
-            "histogram",
-            self
-        )
-        
-        # === NHÓM HÌNH THÁI HỌC (COLLAPSIBLE) ===
-        self.morphology_frame = Section.create_collapsible_section(
-            scrollable_frame,
-            "HIỆU ỨNG ĐẶC BIỆT",
-            [
-                ("Làm Mỏng", self.apply_erosion, "#1565c0"),
-                ("Làm Dày", self.apply_dilation, "#1976d2"),
-                ("Loại Nhiễu Nhỏ", self.apply_opening, "#1e88e5"),
-                ("Lấp Lỗ Hổng", self.apply_closing, "#42a5f5"),
-            ],
-            "morphology",
-            self
-        )
+        Section.create_separator(scrollable_frame)
         
         # === NHÓM XOAY & LẬT ẢNH (COLLAPSIBLE) ===
         self.transform_frame = Section.create_collapsible_section(
             scrollable_frame,
-            "XOAY & LẬT ẢNH",
+            "🔄 XOAY & BIẾN ĐỔI",
             [
-                ("Xoay Phải 90°", self.rotate_right_90, "#ff6f00"),
-                ("Xoay Trái 90°", self.rotate_left_90, "#ff8f00"),
-                ("Xoay 180°", self.rotate_180, "#ffa726"),
-                ("Lật Ngang", self.flip_horizontal, "#ffb74d"),
-                ("Lật Dọc", self.flip_vertical, "#ffcc80"),
-                ("Phóng To", self.zoom_in_image, "#fb8c00"),
-                ("Thu Nhỏ", self.zoom_out_image, "#f57c00"),
+                ("↻ Xoay Phải 90°", self.rotate_right_90, "#ff6f00"),
+                ("↺ Xoay Trái 90°", self.rotate_left_90, "#ff8f00"),
+                ("⟲ Xoay 180°", self.rotate_180, "#ffa726"),
+                ("↔ Lật Ngang", self.flip_horizontal, "#ffb74d"),
+                ("↕ Lật Dọc", self.flip_vertical, "#ffcc80"),
+                ("🔍 Phóng To", self.zoom_in_image, "#fb8c00"),
+                ("🔎 Thu Nhỏ", self.zoom_out_image, "#f57c00"),
             ],
             "transform",
             self
@@ -618,72 +589,20 @@ class ImageEditorApp:
             EdgeDetection.auto_canny,
             "✓ Đã phát hiện viền bằng Canny"
         )
-
-    # === CÁC HÀM XỬ LÝ HISTOGRAM ===
-
-    def apply_histogram_equalization(self):
-        """Áp dụng cân bằng histogram"""
+    
+    def apply_laplacian_edge(self):
+        """Áp dụng phát hiện biên Laplacian"""
         self.apply_effect(
-            Histogram.histogram_equalization,
-            "✓ Đã cân bằng histogram"
+            EdgeDetection.laplacian_edge_detection,
+            "✓ Đã phát hiện viền bằng Laplacian",
+            ksize=3
         )
-
-    def apply_clahe(self):
-        """Áp dụng CLAHE"""
+    
+    def apply_scharr_edge(self):
+        """Áp dụng phát hiện biên Scharr"""
         self.apply_effect(
-            Histogram.clahe_equalization,
-            "✓ Đã áp dụng CLAHE",
-            clip_limit=2.0
-        )
-
-    def apply_histogram_stretching(self):
-        """Áp dụng kéo giãn histogram"""
-        self.apply_effect(
-            Histogram.histogram_stretching,
-            "✓ Đã kéo giãn histogram"
-        )
-
-    def apply_auto_enhance(self):
-        """Áp dụng tự động tăng cường"""
-        self.apply_effect(
-            Histogram.auto_enhance,
-            "✓ Đã tự động tăng cường ảnh"
-        )
-
-    # === CÁC HÀM XỬ LÝ HÌNH THÁI HỌC ===
-
-    def apply_erosion(self):
-        """Áp dụng phép co (Erosion)"""
-        self.apply_effect(
-            Morphology.erosion,
-            "✓ Đã áp dụng phép co (Erosion)",
-            kernel_size=(3, 3),
-            iterations=1
-        )
-
-    def apply_dilation(self):
-        """Áp dụng phép giãn (Dilation)"""
-        self.apply_effect(
-            Morphology.dilation,
-            "✓ Đã áp dụng phép giãn (Dilation)",
-            kernel_size=(3, 3),
-            iterations=1
-        )
-
-    def apply_opening(self):
-        """Áp dụng phép mở (Opening)"""
-        self.apply_effect(
-            Morphology.opening,
-            "✓ Đã áp dụng phép mở (Opening)",
-            kernel_size=(5, 5)
-        )
-
-    def apply_closing(self):
-        """Áp dụng phép đóng (Closing)"""
-        self.apply_effect(
-            Morphology.closing,
-            "✓ Đã áp dụng phép đóng (Closing)",
-            kernel_size=(5, 5)
+            EdgeDetection.scharr_edge_detection,
+            "✓ Đã phát hiện viền bằng Scharr"
         )
 
     # === CÁC HÀM XỬ LÝ XOAY & LẬT ẢNH ===

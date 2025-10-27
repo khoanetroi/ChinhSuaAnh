@@ -10,8 +10,6 @@ from . import ImageHandler
 from . import FaceBeautify
 from . import Sharpen
 from . import EdgeDetection
-from . import Histogram
-from . import Morphology
 from . import Transform
 
 __all__ = [
@@ -21,7 +19,5 @@ __all__ = [
     'FaceBeautify',
     'Sharpen',
     'EdgeDetection',
-    'Histogram',
-    'Morphology',
     'Transform'
 ]
