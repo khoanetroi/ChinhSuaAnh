@@ -1,7 +1,7 @@
 # -*- coding: utf-8 */
 """
 App.py - Ứng dụng chỉnh sửa ảnh chuyên nghiệp với giao diện GUI
-Các chức năng: 
+Các chức năng:
 - Làm mờ & làm mịn ảnh
 - Điều chỉnh độ sáng, tối, tương phản
 - Làm rõ nét ảnh
@@ -9,6 +9,9 @@ Các chức năng:
 - Xoay & biến đổi ảnh (Transform)
 - Nhận diện và làm đẹp khuôn mặt
 """
+
+# IMPORTANT: Fix Tkinter path issue BEFORE importing tkinter
+import fix_tkinter  # This sets TCL_LIBRARY and TK_LIBRARY
 
 import os
 import tkinter as tk

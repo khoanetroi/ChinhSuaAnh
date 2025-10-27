@@ -4,6 +4,9 @@ FaceBeautifyWindow.py - Cửa sổ làm đẹp khuôn mặt từ ảnh (không p
 Copy file này vào: thư mục gốc (cùng cấp với App.py)
 """
 
+# IMPORTANT: Fix Tkinter path issue BEFORE importing tkinter
+import fix_tkinter  # This sets TCL_LIBRARY and TK_LIBRARY
+
 import tkinter as tk
 from tkinter import ttk, messagebox
 import cv2

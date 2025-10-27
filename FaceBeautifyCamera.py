@@ -3,6 +3,9 @@
 FaceBeautifyCamera.py - Fix nhấp nháy màn hình
 """
 
+# IMPORTANT: Fix Tkinter path issue BEFORE importing tkinter
+import fix_tkinter  # This sets TCL_LIBRARY and TK_LIBRARY
+
 import cv2
 import numpy as np
 import tkinter as tk
