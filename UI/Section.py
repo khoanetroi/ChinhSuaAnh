@@ -10,11 +10,11 @@ from . import Button
 
 def create_collapsible_section(parent, title, buttons, section_name, app_instance):
     # Container cho toàn bộ section
-    section_container = tk.Frame(parent, bg="white")
-    section_container.pack(fill=tk.X, padx=10, pady=5)
+    section_container = tk.Frame(parent, bg="#16213e")
+    section_container.pack(fill=tk.X, padx=8, pady=4)
     
     # Header có thể click
-    header_frame = tk.Frame(section_container, bg="#ecf0f1", relief=tk.RAISED, borderwidth=1)
+    header_frame = tk.Frame(section_container, bg="#1a1a2e", relief=tk.FLAT, borderwidth=0)
     header_frame.pack(fill=tk.X)
     
     # Icon và title
@@ -26,9 +26,9 @@ def create_collapsible_section(parent, title, buttons, section_name, app_instanc
     )
     
     # Content frame (chứa các button)
-    content_frame = tk.Frame(section_container, bg="white")
+    content_frame = tk.Frame(section_container, bg="#16213e")
     if not getattr(app_instance, f"{section_name}_collapsed"):
-        content_frame.pack(fill=tk.X, pady=5)
+        content_frame.pack(fill=tk.X, pady=4)
     
     # Tạo các button trong section
     for text, command, color in buttons:
@@ -42,7 +42,7 @@ def toggle_section(section_name, content_frame, header_btn, title, app_instance)
     
     if is_collapsed:
         # Mở rộng
-        content_frame.pack(fill=tk.X, pady=5)
+        content_frame.pack(fill=tk.X, pady=4)
         header_btn.config(text=f"▼ {title}")
         setattr(app_instance, f"{section_name}_collapsed", False)
     else:
@@ -53,8 +53,8 @@ def toggle_section(section_name, content_frame, header_btn, title, app_instance)
 
 
 def create_separator(parent):
-    separator = ttk.Separator(parent, orient='horizontal')
-    separator.pack(fill=tk.X, padx=15, pady=10)
+    separator = tk.Frame(parent, bg="#0f3460", height=2)
+    separator.pack(fill=tk.X, padx=12, pady=8)
     return separator
 
 
@@ -62,9 +62,9 @@ def create_section_label(parent, text):
     label = tk.Label(
         parent,
         text=text,
-        font=("Arial", 12, "bold"),
-        bg="white",
-        fg="#2c3e50"
+        font=("Segoe UI", 11, "bold"),
+        bg="#16213e",
+        fg="#53a8b6"
     )
-    label.pack(pady=(10, 5))
+    label.pack(pady=(8, 4))
     return label

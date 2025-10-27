@@ -22,27 +22,27 @@ def darken_color(hex_color, factor=0.8):
     return f'#{r:02x}{g:02x}{b:02x}'
 
 
-# Định nghĩa bảng màu chuẩn cho ứng dụng
+# Định nghĩa bảng màu chuẩn cho ứng dụng - Modern Dark Theme
 COLORS = {
-    'primary': '#3498db',      # Xanh dương chính
-    'success': '#27ae60',      # Xanh lá - thành công
-    'danger': '#e74c3c',       # Đỏ - nguy hiểm
-    'warning': '#f39c12',      # Cam - cảnh báo
-    'info': '#3498db',         # Xanh - thông tin
-    'dark': '#2c3e50',         # Tối
-    'light': '#ecf0f1',        # Sáng
+    'primary': '#e94560',      # Đỏ hồng chính
+    'success': '#06d6a0',      # Xanh lá - thành công
+    'danger': '#ef476f',       # Đỏ - nguy hiểm
+    'warning': '#ffd166',      # Vàng - cảnh báo
+    'info': '#118ab2',         # Xanh - thông tin
+    'dark': '#1a1a2e',         # Tối
+    'light': '#53a8b6',        # Sáng xanh
     'gray': '#95a5a6',         # Xám
     
-    # Màu cho blur effects
-    'blur_1': '#9b59b6',
-    'blur_2': '#8e44ad',
-    'blur_3': '#7d3c98',
-    'blur_4': '#6c3483',
+    # Màu cho blur effects - Purple tones
+    'blur_1': '#a855f7',
+    'blur_2': '#9333ea',
+    'blur_3': '#7e22ce',
+    'blur_4': '#6b21a8',
     
-    # Màu cho brightness effects
-    'bright_1': '#f39c12',
-    'bright_2': '#e67e22',
-    'bright_3': '#d68910',
+    # Màu cho brightness effects - Orange/Yellow tones
+    'bright_1': '#fb923c',
+    'bright_2': '#f97316',
+    'bright_3': '#ea580c',
 }
 
 

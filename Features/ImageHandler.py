@@ -86,28 +86,60 @@ def convert_to_display_image(image, max_width=850, max_height=650):
 
 
 class ImageHistory:
-    def __init__(self, max_history=10):
-        self.history = []
+    """Quản lý lịch sử ảnh với tính năng hoàn tác/redo."""
+
+    def __init__(self, max_history=20):
         self.max_history = max_history
-    
-    def save(self, image):
+        self.undo_stack = []
+        self.redo_stack = []
+
+    def set_initial(self, image):
+        """Thiết lập trạng thái ban đầu khi mở/reset ảnh."""
+        self.undo_stack = []
+        self.redo_stack = []
         if image is not None:
-            if len(self.history) >= self.max_history:
-                self.history.pop(0)
-            self.history.append(image.copy())
-    
+            self.undo_stack.append(image.copy())
+
+    def push_state(self, image):
+        """Lưu trạng thái mới sau mỗi lần chỉnh sửa."""
+        if image is None:
+            return
+
+        if self.undo_stack and np.array_equal(image, self.undo_stack[-1]):
+            # Không lưu nếu ảnh không thay đổi
+            self.redo_stack.clear()
+            return
+
+        self.undo_stack.append(image.copy())
+        if len(self.undo_stack) > self.max_history:
+            self.undo_stack.pop(0)
+        self.redo_stack.clear()
+
     def clear(self):
-        self.history.clear()
-    
+        self.undo_stack = []
+        self.redo_stack = []
+
     def get_last(self):
-        if self.history:
-            return self.history[-1]
+        if self.undo_stack:
+            return self.undo_stack[-1].copy()
         return None
-    
-    def undo(self):
-        if len(self.history) > 1:
-            self.history.pop()
-            return self.history[-1].copy()
-        elif len(self.history) == 1:
-            return self.history[0].copy()
-        return None
+
+    def undo(self, current_image):
+        """Hoàn tác về trạng thái trước đó."""
+        if len(self.undo_stack) <= 1:
+            return None
+
+        if current_image is not None:
+            self.redo_stack.append(current_image.copy())
+
+        self.undo_stack.pop()
+        return self.undo_stack[-1].copy()
+
+    def redo(self):
+        """Làm lại bước vừa hoàn tác."""
+        if not self.redo_stack:
+            return None
+
+        restored = self.redo_stack.pop()
+        self.undo_stack.append(restored.copy())
+        return restored.copy()
